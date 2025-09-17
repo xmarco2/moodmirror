@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
   build-android:
@@ -30,13 +27,13 @@ jobs:
       - name: Sync Capacitor Android
         run: npx cap sync android
 
-      - name: Setup Java (required for Android build)
+      - name: Setup Java (for Android build)
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '11'
 
-      - name: Grant execute permission to gradlew
+      - name: Grant execute permissions to gradlew
         working-directory: android
         run: chmod +x gradlew
 
@@ -44,9 +41,8 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v3
         with:
-          name: moodmirror-apk
+          name: moodmirror-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
-
