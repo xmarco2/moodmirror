@@ -1,342 +1,52 @@
-package.json (aggiungi queste dipendenze):
+name: Build Android APK
 
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
-{
-  "dependencies": {
-    "@huggingface/transformers": "^3.0.0",
-    "@capacitor/core": "latest",
-    "@capacitor/camera": "latest",
-    "@capacitor/device": "latest"
-  },
-  "devDependencies": {
-    "@capacitor/cli": "latest"
-  }
-}
-📁 Struttura Completa dei File
-Show all
-4 tools used
-🎨 File di Design System
-src/index.css (Design System Completo):
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
 
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
-@layer base {
-  :root {
-    /* Cyber-Vaporwave Theme */
-    --background: 260 20% 3%;
-    --foreground: 280 30% 90%;
-    --card: 260 25% 8%;
-    --card-foreground: 280 30% 90%;
-    --popover: 260 25% 8%;
-    --popover-foreground: 280 30% 90%;
-    --primary: 270 100% 70%;
-    --primary-foreground: 260 20% 3%;
-    --secondary: 260 30% 15%;
-    --secondary-foreground: 280 30% 90%;
-    --muted: 260 20% 10%;
-    --muted-foreground: 280 15% 60%;
-    --accent: 285 100% 75%;
-    --accent-foreground: 260 20% 3%;
-    --destructive: 0 75% 60%;
-    --destructive-foreground: 280 30% 90%;
-    --border: 260 30% 15%;
-    --input: 260 30% 15%;
-    --ring: 270 100% 70%;
+      - name: Install dependencies
+        run: npm install
 
-    /* Custom design tokens */
-    --neon-glow: 270 100% 70%;
-    --deep-violet: 260 35% 12%;
-    --pitch-black: 260 20% 3%;
-    --cyber-accent: 285 100% 75%;
-    
-    /* Gradients */
-    --gradient-cosmic: linear-gradient(135deg, hsl(var(--pitch-black)), hsl(var(--deep-violet)));
-    --gradient-neon: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
-    --gradient-overlay: linear-gradient(180deg, transparent, hsl(var(--pitch-black) / 0.8));
-    
-    /* Shadows and glows */
-    --shadow-neon: 0 0 30px hsl(var(--neon-glow) / 0.5);
-    --shadow-cyber: 0 10px 40px -10px hsl(var(--primary) / 0.4);
-    --shadow-deep: 0 25px 50px -12px hsl(var(--pitch-black) / 0.8);
-    
-    --radius: 1rem;
-  }
-}
+      - name: Build web assets
+        run: npm run build
 
-@layer base {
-  * {
-    @apply border-border;
-  }
+      - name: Add Android platform
+        run: npx cap add android
 
-  body {
-    @apply bg-background text-foreground font-sans;
-    background: var(--gradient-cosmic);
-    min-height: 100vh;
-  }
-}
+      - name: Sync Capacitor Android
+        run: npx cap sync android
 
-@layer components {
-  .cyber-blur {
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-  }
-  
-  .neon-glow {
-    box-shadow: var(--shadow-neon);
-  }
-  
-  .cyber-card {
-    background: linear-gradient(135deg, 
-      hsl(var(--card) / 0.8), 
-      hsl(var(--deep-violet) / 0.6)
-    );
-    backdrop-filter: blur(20px);
-    border: 1px solid hsl(var(--border));
-  }
-  
-  .gradient-text {
-    background: var(--gradient-neon);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-}
-tailwind.config.ts:
+      - name: Setup Java (for Android build)
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
+      - name: Grant execute permission to gradlew
+        working-directory: android
+        run: chmod +x gradlew
 
-import type { Config } from "tailwindcss";
+      - name: Build Android APK (Debug)
+        working-directory: android
+        run: ./gradlew assembleDebug
 
-export default {
-  darkMode: ["class"],
-  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
-  prefix: "",
-  theme: {
-    container: {
-      center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
-    },
-    extend: {
-      colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
-        // Custom cyber colors
-        'neon-glow': "hsl(var(--neon-glow))",
-        'deep-violet': "hsl(var(--deep-violet))",
-        'pitch-black': "hsl(var(--pitch-black))",
-        'cyber-accent': "hsl(var(--cyber-accent))",
-      },
-      backgroundImage: {
-        'gradient-cosmic': 'var(--gradient-cosmic)',
-        'gradient-neon': 'var(--gradient-neon)',
-        'gradient-overlay': 'var(--gradient-overlay)',
-      },
-      boxShadow: {
-        'neon': 'var(--shadow-neon)',
-        'cyber': 'var(--shadow-cyber)',
-        'deep': 'var(--shadow-deep)',
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
-      keyframes: {
-        "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
-        },
-        "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
-        },
-        "cyber-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px hsl(var(--neon-glow) / 0.5)" },
-          "50%": { boxShadow: "0 0 40px hsl(var(--neon-glow) / 0.8), 0 0 60px hsl(var(--cyber-accent) / 0.4)" },
-        },
-        "float": {
-          "0%, 100%": { transform: "translateY(0px)" },
-          "50%": { transform: "translateY(-10px)" },
-        },
-        "pulse-neon": {
-          "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.7" },
-        },
-        "slide-up": {
-          from: { opacity: "0", transform: "translateY(30px)" },
-          to: { opacity: "1", transform: "translateY(0)" },
-        },
-        "fade-in": {
-          from: { opacity: "0" },
-          to: { opacity: "1" },
-        },
-        "scan-line": {
-          "0%": { transform: "translateY(-100%)" },
-          "100%": { transform: "translateY(100vh)" },
-        }
-      },
-      animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-        "cyber-glow": "cyber-glow 3s ease-in-out infinite",
-        "float": "float 6s ease-in-out infinite",
-        "pulse-neon": "pulse-neon 2s ease-in-out infinite",
-        "slide-up": "slide-up 0.6s ease-out",
-        "fade-in": "fade-in 0.8s ease-out",
-        "scan-line": "scan-line 2s linear infinite",
-      },
-    },
-  },
-  plugins: [require("tailwindcss-animate")],
-} satisfies Config;
-📱 Setup Capacitor per Mobile
-capacitor.config.ts:
-
-
-import { CapacitorConfig } from '@capacitor/core';
-
-const config: CapacitorConfig = {
-  appId: 'app.lovable.moodmirror',
-  appName: 'MoodMirror',
-  webDir: 'dist',
-  server: {
-    androidScheme: 'https'
-  },
-  plugins: {
-    Camera: {
-      permissions: ['camera']
-    }
-  }
-};
-
-export default config;
-🚀 Istruzioni Complete per lo Sviluppo Mobile
-1. Esportazione e Setup Locale
-
-# 1. Esporta il progetto su GitHub dal pulsante in alto a destra
-# 2. Clona il repository
-git clone [YOUR_REPO_URL]
-cd moodmirror
-
-# 3. Installa dipendenze
-npm install
-
-# 4. Installa Capacitor
-npm install @capacitor/core @capacitor/cli @capacitor/camera @capacitor/device
-npm install -D @capacitor/cli
-
-# 5. Inizializza Capacitor
-npx cap init
-
-# 6. Build del progetto
-npm run build
-2. Setup per Android
-
-# Aggiungi piattaforma Android
-npx cap add android
-
-# Sincronizza il progetto
-npx cap sync android
-
-# Apri Android Studio
-npx cap open android
-3. Setup per iOS (Mac richiesto)
-
-# Aggiungi piattaforma iOS
-npx cap add ios
-
-# Sincronizza il progetto
-npx cap sync ios
-
-# Apri Xcode
-npx cap open ios
-4. Permessi Camera (Android)
-Aggiungi in android/app/src/main/AndroidManifest.xml:
-
-
-<uses-permission android:name="android.permission.CAMERA" />
-<uses-feature android:name="android.hardware.camera" android:required="true" />
-5. Permessi Camera (iOS)
-Aggiungi in ios/App/App/Info.plist:
-
-
-<key>NSCameraUsageDescription</key>
-<string>MoodMirror needs camera access to analyze your facial expressions for mood detection</string>
-6. Live Reload durante Sviluppo
-
-# Avvia il dev server
-npm run dev
-
-# In un altro terminale, sincronizza con live reload
-npx cap run android --live-reload --external
-# oppure
-npx cap run ios --live-reload --external
-🔧 File Index Principale
-src/pages/Index.tsx:
-
-
-import { useState } from 'react';
-import OnboardingScreen from '@/components/OnboardingScreen';
-import MoodAnalysis from '@/components/MoodAnalysis';
-
-const Index = () => {
-  const [showOnboarding, setShowOnboarding] = useState(true);
-
-  if (showOnboarding) {
-    return <OnboardingScreen onComplete={() => setShowOnboarding(false)} />;
-  }
-
-  return <MoodAnalysis />;
-};
-
-export default Index;
-Con questa configurazione avrai MoodMirror funzionante su mobile con:
-
-✅ Accesso fotocamera nativa
-✅ AI per analisi micro-espressioni
-✅ Design cyber-futuristico responsive
-✅ Performance ottimizzate per mobile
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: moodmirror-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
